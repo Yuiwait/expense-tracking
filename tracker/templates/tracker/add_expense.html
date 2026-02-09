@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Expense</title>
+</head>
+<body>
+  <h2>Add New Expense</h2>
+  <form method="POST">
+    {% csrf_token %}
+    <label>Title:</label><input type="text" name="title" required><br>
+    <label>Amount:</label><input type="number" name="amount" required><br>
+    <label for="category">Category:</label>
+    <select name="category" id="category" required>
+        <option value="">--Select Category--</option>
+        {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+    </select><br><br>
+    <label>Date:</label><input type="date" name="date" value="{{ today }}"><br>
+    <button type="submit">Save</button>
+  </form>
+  <a href="/">Back</a>
+</body>
+</html>
