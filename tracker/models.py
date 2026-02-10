@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Category(models.Model):
     name = models.CharField(max_length=100)
 
@@ -17,3 +18,17 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.title} - ₹{self.amount}"
+
+
+# ✅ NEW MODEL: Budget Planner
+class Budget(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.FloatField()
+    month = models.IntegerField()
+    year = models.IntegerField()
+
+    class Meta:
+        unique_together = ('user', 'month', 'year')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.month}/{self.year} - ₹{self.amount}"

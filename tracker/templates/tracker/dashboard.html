@@ -4,15 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Expense Dashboard</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
       body { background:#f5f7fb; }
-      .card-total { background: linear-gradient(90deg,#4f46e5,#06b6d4); color: white; }
+      .card-total {
+        background: linear-gradient(90deg,#4f46e5,#06b6d4);
+        color: white;
+      }
+      .card-budget {
+        background: linear-gradient(90deg,#16a34a,#22c55e);
+        color: white;
+      }
+      .card-warning {
+        background: linear-gradient(90deg,#dc2626,#f97316);
+        color: white;
+      }
       .small-muted { font-size:0.9rem; color:#6b7280; }
       .table-wrap { max-height:60vh; overflow:auto; }
     </style>
   </head>
+
   <body>
+    <!-- Navbar -->
     <nav class="navbar navbar-expand bg-white shadow-sm mb-4">
       <div class="container">
         <a class="navbar-brand fw-bold" href="#">Expense Tracker</a>
@@ -24,7 +39,10 @@
     </nav>
 
     <div class="container">
+      <!-- TOP CARDS -->
       <div class="row g-3 mb-4">
+
+        <!-- Total Expense -->
         <div class="col-md-4">
           <div class="card card-total shadow-sm p-3">
             <div class="d-flex justify-content-between align-items-center">
@@ -33,58 +51,100 @@
                 <div class="h3 mb-0">₹{{ total_expense }}</div>
               </div>
               <div class="text-end">
-                <div class="small-muted">Expenses</div>
+                <div class="small-muted">Entries</div>
                 <div class="fw-semibold">{{ expenses|length }}</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="col-md-8">
-          <div class="card shadow-sm p-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="mb-0">Recent Expenses</h5>
-              <form method="get" class="d-flex" style="gap:.5rem">
-                <input name="q" class="form-control form-control-sm" placeholder="Search title or category">
-                <button class="btn btn-sm btn-outline-secondary">Filter</button>
-              </form>
+        <!-- Budget Card -->
+        <div class="col-md-4">
+          {% if budget %}
+            <div class="card shadow-sm p-3 {% if remaining < 0 %}card-warning{% else %}card-budget{% endif %}">
+              <div>
+                <div class="small-muted">Monthly Budget</div>
+                <div class="h4 mb-1">₹{{ budget.amount }}</div>
+                <div class="small">
+                  Remaining: <strong>₹{{ remaining }}</strong>
+                </div>
+                {% if remaining < 0 %}
+                  <div class="mt-1 fw-semibold">⚠ Budget Exceeded</div>
+                {% endif %}
+              </div>
             </div>
+          {% else %}
+            <div class="card shadow-sm p-3 text-center">
+              <div class="small-muted mb-2">No budget set for this month</div>
+              <a href="{% url 'set_budget' %}" class="btn btn-sm btn-outline-success">
+                Set Monthly Budget
+              </a>
+            </div>
+          {% endif %}
+        </div>
 
-            <div class="table-wrap">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>Title</th>
-                    <th>Category</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for e in expenses %}
-                    <tr>
-                      <td>{{ e.title }}</td>
-                      <td><span class="badge bg-secondary">{{ e.category.name }}</span></td>
-                      <td class="text-success fw-semibold">₹{{ e.amount }}</td>
-                      <td class="small-muted">{{ e.date }}</td>
-                      <td>
-                        <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'edit_expense' e.id %}">Edit</a>
-                        <a class="btn btn-sm btn-outline-danger" href="{% url 'delete_expense' e.id %}"
-                           onclick="return confirm('Are you sure you want to delete this expense?');">Delete</a>
-                      </td>
-                    </tr>
-                  {% empty %}
-                    <tr>
-                      <td colspan="5" class="text-center small-muted">No expenses yet. Add your first expense.</td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
+        <!-- Update Budget Button -->
+        <div class="col-md-4">
+          <div class="card shadow-sm p-3 text-center">
+            <div class="small-muted mb-2">Manage Budget</div>
+            <a href="{% url 'set_budget' %}" class="btn btn-sm btn-outline-primary">
+              Set / Update Budget
+            </a>
           </div>
         </div>
+
       </div>
+
+      <!-- EXPENSE TABLE -->
+      <div class="card shadow-sm p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="mb-0">Recent Expenses</h5>
+          <form method="get" class="d-flex" style="gap:.5rem">
+            <input name="q" class="form-control form-control-sm" placeholder="Search title or category">
+            <button class="btn btn-sm btn-outline-secondary">Filter</button>
+          </form>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in expenses %}
+                <tr>
+                  <td>{{ e.title }}</td>
+                  <td><span class="badge bg-secondary">{{ e.category.name }}</span></td>
+                  <td class="text-success fw-semibold">₹{{ e.amount }}</td>
+                  <td class="small-muted">{{ e.date }}</td>
+                  <td>
+                    <a class="btn btn-sm btn-outline-primary me-1"
+                       href="{% url 'edit_expense' e.id %}">Edit</a>
+                    <a class="btn btn-sm btn-outline-danger"
+                       href="{% url 'delete_expense' e.id %}"
+                       onclick="return confirm('Are you sure you want to delete this expense?');">
+                       Delete
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="5" class="text-center small-muted">
+                    No expenses yet. Add your first expense.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
