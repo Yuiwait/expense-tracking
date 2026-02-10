@@ -6,6 +6,7 @@
     <title>Expense Dashboard</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
       body { background:#f5f7fb; }
@@ -21,8 +22,14 @@
         background: linear-gradient(90deg,#dc2626,#f97316);
         color: white;
       }
+      .card-category {
+        background: linear-gradient(135deg,#f59e0b,#f97316);
+        color: white;
+      }
       .small-muted { font-size:0.9rem; color:#6b7280; }
       .table-wrap { max-height:60vh; overflow:auto; }
+      .chart-container { position: relative; height: 300px; margin-bottom: 2rem; }
+      .chart-wrapper { background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     </style>
   </head>
 
@@ -37,6 +44,7 @@
         </div>
       </div>
     </nav>
+    
 
     <div class="container">
       <!-- TOP CARDS -->
@@ -57,6 +65,7 @@
             </div>
           </div>
         </div>
+        
 
         <!-- Budget Card -->
         <div class="col-md-4">
@@ -93,9 +102,6 @@
           </div>
         </div>
 
-      </div>
-
-      <!-- EXPENSE TABLE -->
       <div class="card shadow-sm p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h5 class="mb-0">Recent Expenses</h5>
@@ -105,7 +111,11 @@
           </form>
         </div>
 
-        <div class="table-wrap">
+        
+      </div>
+
+      </div>
+      <div class="table-wrap">
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
@@ -143,10 +153,146 @@
             </tbody>
           </table>
         </div>
+                    <!-- TOP CATEGORIES SUMMARY -->
+      {% if top_categories %}
+        <div class="row g-3 mb-4">
+          <div class="col-12">
+            <h6 class="fw-bold mb-3">Top Spending Categories</h6>
+          </div>
+          {% for category in top_categories %}
+            <div class="col-md-4">
+              <div class="card card-category shadow-sm p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <div class="small-muted">{{ category.name }}</div>
+                    <div class="h5 mb-0">₹{{ category.amount|floatformat:2 }}</div>
+                  </div>
+                  <div class="text-end">
+                    <div class="small-muted">Percentage</div>
+                    <div class="fw-semibold">{{ category.percentage }}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- CHARTS & SUMMARY SECTION -->
+      <div class="row g-3 mb-4">
+        
+        <!-- Category Breakdown Chart -->
+        <div class="col-lg-6">
+          <div class="chart-wrapper">
+            <h6 class="mb-3 fw-bold">Expenses by Category</h6>
+            {% if category_amounts|length > 0 %}
+              <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+              </div>
+            {% else %}
+              <div class="text-center text-muted py-5">
+                <p>No expenses yet. Add your first expense to see the breakdown.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Monthly Trend Chart -->
+        <div class="col-lg-6">
+          <div class="chart-wrapper">
+            <h6 class="mb-3 fw-bold">12-Month Spending Trend</h6>
+            {% if monthly_amounts|length > 0 %}
+              <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+              </div>
+            {% else %}
+              <div class="text-center text-muted py-5">
+                <p>No spending data available.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
       </div>
+
+
 
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      /* eslint-disable */
+      // Category Pie Chart
+      {% if category_amounts|length > 0 %}
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+          type: 'doughnut',
+          data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+              data: {{ category_amounts|safe }},
+              backgroundColor: [
+                '#4f46e5', '#06b6d4', '#f59e0b', '#ef4444', '#8b5cf6',
+                '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#10b981'
+              ],
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { padding: 15, font: { size: 12 } }
+              }
+            }
+          }
+        });
+      {% endif %}
+
+      // Monthly Trend Line Chart
+      {% if monthly_amounts|length > 0 %}
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        const monthlyChart = new Chart(monthlyCtx, {
+          type: 'line',
+          data: {
+            labels: {{ monthly_labels|safe }},
+            datasets: [{
+              label: 'Monthly Spending (₹)',
+              data: {{ monthly_amounts|safe }},
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.1)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 5,
+              pointBackgroundColor: '#4f46e5',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                labels: { font: { size: 12 } }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { callback: function(value) { return '₹' + value; } }
+              }
+            }
+          }
+        });
+      {% endif %}
+      /* eslint-enable */
+    </script>
   </body>
 </html>

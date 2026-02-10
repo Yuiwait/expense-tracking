@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Sum
 from datetime import datetime
+import json
 
 from .models import Expense, Category, Budget
 
@@ -33,12 +34,60 @@ def dashboard(request):
 
     categories = Category.objects.all()
 
+    # 📈 Category Breakdown
+    category_data = expenses.values('category__name').annotate(
+        total=Sum('amount')
+    ).order_by('-total')
+
+    category_labels = [item['category__name'] for item in category_data]
+    category_amounts = [float(item['total']) for item in category_data]
+
+    # 📊 Monthly Spending Trend (Last 12 months)
+    monthly_data = {}
+    
+    for i in range(11, -1, -1):
+        # Calculate month_date by subtracting months
+        month_offset = i
+        month = now.month - month_offset
+        year = now.year
+        
+        while month <= 0:
+            month += 12
+            year -= 1
+        
+        month_key = datetime(year, month, 1).strftime('%b %Y')
+        
+        monthly_expenses = expenses.filter(
+            date__year=year,
+            date__month=month
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        monthly_data[month_key] = float(monthly_expenses)
+
+    monthly_labels = list(monthly_data.keys())
+    monthly_amounts = list(monthly_data.values())
+
+    # 🎯 Top Categories (for summary cards)
+    top_categories = []
+    for category_item in category_data[:3]:
+        percentage = (category_item['total'] / total_expense * 100) if total_expense > 0 else 0
+        top_categories.append({
+            'name': category_item['category__name'],
+            'amount': category_item['total'],
+            'percentage': round(percentage, 1)
+        })
+
     return render(request, 'tracker/dashboard.html', {
         'expenses': expenses,
         'total_expense': total_expense,
         'categories': categories,
         'budget': budget,
         'remaining': remaining,
+        'category_labels': json.dumps(category_labels),
+        'category_amounts': json.dumps(category_amounts),
+        'monthly_labels': json.dumps(monthly_labels),
+        'monthly_amounts': json.dumps(monthly_amounts),
+        'top_categories': top_categories,
     })
 
 
