@@ -1,23 +1,92 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <title>Expense Dashboard</title>
-</head>
-<body>
-  <h1>Welcome, {{ user.username }}</h1>
-  <h3>Total Expense: ₹{{ total_expense }}</h3>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Expense Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body { background:#f5f7fb; }
+      .card-total { background: linear-gradient(90deg,#4f46e5,#06b6d4); color: white; }
+      .small-muted { font-size:0.9rem; color:#6b7280; }
+      .table-wrap { max-height:60vh; overflow:auto; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand bg-white shadow-sm mb-4">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="#">Expense Tracker</a>
+        <div class="d-flex align-items-center">
+          <span class="me-3 small-muted">Signed in as {{ user.username }}</span>
+          <a class="btn btn-outline-primary btn-sm" href="{% url 'add_expense' %}">Add Expense</a>
+        </div>
+      </div>
+    </nav>
 
-  <a href="{% url 'add_expense' %}">Add Expense</a>
-  <table border="1">
-    <tr><th>Title</th><th>Category</th><th>Amount</th><th>Date</th></tr>
-    {% for e in expenses %}
-      <tr>
-        <td>{{ e.title }}</td>
-        <td>{{ e.category.name }}</td>
-        <td>₹{{ e.amount }}</td>
-        <td>{{ e.date }}</td>
-      </tr>
-    {% endfor %}
-  </table>
-</body>
+    <div class="container">
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="card card-total shadow-sm p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="small-muted">Total Expense</div>
+                <div class="h3 mb-0">₹{{ total_expense }}</div>
+              </div>
+              <div class="text-end">
+                <div class="small-muted">Expenses</div>
+                <div class="fw-semibold">{{ expenses|length }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-8">
+          <div class="card shadow-sm p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="mb-0">Recent Expenses</h5>
+              <form method="get" class="d-flex" style="gap:.5rem">
+                <input name="q" class="form-control form-control-sm" placeholder="Search title or category">
+                <button class="btn btn-sm btn-outline-secondary">Filter</button>
+              </form>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for e in expenses %}
+                    <tr>
+                      <td>{{ e.title }}</td>
+                      <td><span class="badge bg-secondary">{{ e.category.name }}</span></td>
+                      <td class="text-success fw-semibold">₹{{ e.amount }}</td>
+                      <td class="small-muted">{{ e.date }}</td>
+                      <td>
+                        <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'edit_expense' e.id %}">Edit</a>
+                        <a class="btn btn-sm btn-outline-danger" href="{% url 'delete_expense' e.id %}"
+                           onclick="return confirm('Are you sure you want to delete this expense?');">Delete</a>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="5" class="text-center small-muted">No expenses yet. Add your first expense.</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>
