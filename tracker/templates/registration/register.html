@@ -1,10 +1,10 @@
-<!-- tracker/templates/registration/login.html -->
+<!-- tracker/templates/registration/register.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ExpenseTracker - Login</title>
+    <title>ExpenseTracker - Sign Up</title>
     <style>
         * {
             margin: 0;
@@ -57,7 +57,7 @@
             }
         }
 
-        .login-container {
+        .register-container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -80,7 +80,7 @@
             }
         }
 
-        .login-header {
+        .register-header {
             text-align: center;
             margin-bottom: 40px;
         }
@@ -90,7 +90,7 @@
             margin-bottom: 15px;
         }
 
-        .login-header h1 {
+        .register-header h1 {
             color: #333;
             font-size: 28px;
             margin-bottom: 5px;
@@ -100,7 +100,7 @@
             background-clip: text;
         }
 
-        .login-header p {
+        .register-header p {
             color: #666;
             font-size: 14px;
             margin-bottom: 20px;
@@ -121,6 +121,7 @@
         }
 
         input[type="text"],
+        input[type="email"],
         input[type="password"] {
             width: 100%;
             padding: 14px 16px;
@@ -133,6 +134,7 @@
         }
 
         input[type="text"]:focus,
+        input[type="email"]:focus,
         input[type="password"]:focus {
             outline: none;
             border-color: #667eea;
@@ -155,21 +157,28 @@
             margin-bottom: 4px;
         }
 
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 25px;
-            font-size: 14px;
+        .password-help {
+            background: #f0f4ff;
+            border-left: 3px solid #667eea;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 12px;
             color: #555;
+            line-height: 1.5;
         }
 
-        .remember-me input[type="checkbox"] {
-            cursor: pointer;
-            accent-color: #667eea;
+        .password-help ul {
+            margin-left: 18px;
+            margin-top: 5px;
         }
 
-        .login-btn {
+        .password-help li {
+            color: #555;
+            margin-bottom: 3px;
+        }
+
+        .register-btn {
             width: 100%;
             padding: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -185,16 +194,16 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
-        .login-btn:hover {
+        .register-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
 
-        .login-btn:active {
+        .register-btn:active {
             transform: translateY(0);
         }
 
-        .signup-link {
+        .login-link {
             text-align: center;
             margin-top: 30px;
             padding-top: 20px;
@@ -203,14 +212,14 @@
             font-size: 14px;
         }
 
-        .signup-link a {
+        .login-link a {
             color: #667eea;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s ease;
         }
 
-        .signup-link a:hover {
+        .login-link a:hover {
             color: #764ba2;
             text-decoration: underline;
         }
@@ -225,24 +234,34 @@
             border-left: 4px solid #c33;
         }
 
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            border-left: 4px solid #3c3;
+        }
+
         @media (max-width: 480px) {
-            .login-container {
+            .register-container {
                 margin: 20px;
                 padding: 30px;
             }
 
-            .login-header h1 {
+            .register-header h1 {
                 font-size: 24px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
+    <div class="register-container">
+        <div class="register-header">
             <div class="logo">💰</div>
-            <h1>ExpenseTracker</h1>
-            <p>Take control of your finances</p>
+            <h1>Create Account</h1>
+            <p>Join ExpenseTracker today</p>
         </div>
 
         {% if form.non_field_errors %}
@@ -262,9 +281,10 @@
                     type="text" 
                     id="id_username" 
                     name="username" 
-                    placeholder="Enter your username"
+                    placeholder="Choose a unique username"
                     required
                     autofocus
+                    value="{{ form.username.value|default:'' }}"
                 >
                 {% if form.username.errors %}
                     <ul>
@@ -276,35 +296,68 @@
             </div>
 
             <div class="form-group">
-                <label for="id_password">Password</label>
+                <label for="id_email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="id_email" 
+                    name="email" 
+                    placeholder="Enter your email"
+                    required
+                    value="{{ form.email.value|default:'' }}"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="id_password1">Password</label>
                 <input 
                     type="password" 
-                    id="id_password" 
-                    name="password" 
-                    placeholder="Enter your password"
+                    id="id_password1" 
+                    name="password1" 
+                    placeholder="Create a strong password"
                     required
                 >
-                {% if form.password.errors %}
+                {% if form.password1.errors %}
                     <ul>
-                        {% for error in form.password.errors %}
+                        {% for error in form.password1.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if form.password1.help_text %}
+                    <div class="password-help">
+                        <strong>Password Requirements:</strong>
+                        <ul>
+                            <li>At least 8 characters</li>
+                            <li>Cannot be entirely numeric</li>
+                            <li>Mix of letters, numbers & symbols recommended</li>
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password2">Confirm Password</label>
+                <input 
+                    type="password" 
+                    id="id_password2" 
+                    name="password2" 
+                    placeholder="Re-enter your password"
+                    required
+                >
+                {% if form.password2.errors %}
+                    <ul>
+                        {% for error in form.password2.errors %}
                             <li>{{ error }}</li>
                         {% endfor %}
                     </ul>
                 {% endif %}
             </div>
 
-            <div class="remember-me">
-                <input type="checkbox" id="remember" name="remember" value="true">
-                <label for="remember" style="margin: 0; text-transform: none; font-weight: normal;">
-                    Remember me
-                </label>
-            </div>
-
-            <button type="submit" class="login-btn">Login</button>
+            <button type="submit" class="register-btn">Create Account</button>
         </form>
 
-        <div class="signup-link">
-            Don't have an account? <a href="{% url 'register' %}">Create one now</a>
+        <div class="login-link">
+            Already have an account? <a href="{% url 'login' %}">Sign in here</a>
         </div>
     </div>
 </body>

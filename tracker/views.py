@@ -1,5 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import authenticate, login
 from django.utils import timezone
 from django.db.models import Sum
 from datetime import datetime
@@ -186,3 +189,52 @@ def set_budget(request):
         'current_month': now.month,
         'current_year': current_year,
     })
+
+
+# 📝 User Registration
+def register(request):
+    if request.method == "POST":
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        
+        # Validation
+        errors = []
+        
+        if not username or not email or not password1 or not password2:
+            errors.append("All fields are required.")
+        elif User.objects.filter(username=username).exists():
+            errors.append("Username already taken. Please choose another.")
+        elif User.objects.filter(email=email).exists():
+            errors.append("Email already registered.")
+        elif len(password1) < 8:
+            errors.append("Password must be at least 8 characters long.")
+        elif password1 != password2:
+            errors.append("Passwords do not match.")
+        elif password1.isdigit():
+            errors.append("Password cannot be entirely numeric.")
+        else:
+            # Create and login user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password1
+            )
+            
+            # Auto-login
+            user = authenticate(username=username, password=password1)
+            if user is not None:
+                login(request, user)
+                return redirect('dashboard')
+        
+        # Return with errors
+        return render(request, 'registration/register.html', {
+            'form': {
+                'username': {'value': username, 'errors': []},
+                'email': {'value': email, 'errors': []},
+            },
+            'form_errors': errors
+        })
+    
+    return render(request, 'registration/register.html', {'form': {}})
